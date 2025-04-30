@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    html, body {
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; 
+      background-color: #abe1e7;
+      font-family: 'Work Sans', sans-serif;
+    }
+
+    #main {
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    #nav-bar {
+      display: flex;
+      padding: 1vw;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 10px;
+      gap: 3vw;
+    }
+
+    #nav-items {
+      display: flex;
+      gap: 7vw;
+    }
+
+    #nav-items h3 a {
+      text-decoration: none;
+      color: black;
+      font-size: 1.5vw;
+      font-weight: 400;
+    }
+
+    #logo img {
+      width: 100%;
+      height: auto;
+      max-width: 150px;
+    }
+
+    #contact-form-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #contact-form {
+      background-color: #9ad4dc;
+      padding: 2vw;
+      border-radius: 20px;
+      box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+
+    #contact-form h1 {
+      color: #0c5c65;
+      font-size: 2.5vw;
+      margin-bottom: 1.5vw;
+    }
+
+    #contact-form input,
+    #contact-form textarea {
+      width: 90%;
+      padding: 1rem;
+      margin: 1vw 0;
+      border: 2px solid #1b8e9a;
+      border-radius: 12px;
+      font-size: 1rem;
+      background-color: #f9f9f9;
+      outline: none;
+      resize: none;
+    }
+
+    #contact-form input:focus,
+    #contact-form textarea:focus {
+      border-color: #145960;
+    }
+
+    #contact-form button {
+      margin-top: 1vw;
+      padding: 0.8rem 2rem;
+      background-color: #1b8e9a;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    #contact-form button:hover {
+      background-color: #145960;
+    }
+
+    @media (max-width: 600px) {
+      #nav-items {
+        gap: 3vw;
+      }
+      #nav-items h3 a {
+        font-size: 3.5vw;
+      }
+      #contact-form h1 {
+        font-size: 6vw;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="main">
+    <div id="nav-bar">
+      <div id="logo"><img src="14.png" alt="Logo" /></div>
+      <div id="nav-items">
+        <h3><a href="index.html">Home</a></h3>
+        <h3><a href="voice.html">Symptom Check</a></h3>
+        <h3><a href="#">My Reports</a></h3>
+        <h3><a id="Nearby-Doctors" href="#">Nearby Doctors</a></h3> 
+
+      </div>
+    </div>
+
+    <div id="contact-form-container">
+      <form id="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+        <h1>Contact Us</h1>
+        <input type="text" name="name" placeholder="Your Name" required /><br>
+        <input type="email" name="email" placeholder="Your Email" required /><br>
+        <textarea name="message" rows="4" placeholder="Your Message" required></textarea><br>
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

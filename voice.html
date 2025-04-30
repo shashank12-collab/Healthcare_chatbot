@@ -1,0 +1,410 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voice Input & Gemini</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="main">
+      <div id="nav-bar">
+        <div id="logo"><img src="14.png" alt="Logo" /></div>
+        <div id="nav-items">
+          <h3><a id="home" href="index.html">Home</a></h3>
+          <h3><a id="Symptom-Check" href="#">Symptom Check</a></h3>
+          <h3><a id="My-reports" href="#">My Reports</a></h3>
+          <h3><a id="Nearby-Doctors" href="#">Nearby Doctors</a></h3>
+        </div>
+      </div>
+
+      <div id="content">
+        <div id="text">
+          <h1>Voice Input for Reports & Gemini Response</h1>
+          <p>
+            Speak in Hindi to record information and get a response from Gemini.
+          </p>
+          <div>
+            <textarea
+              id="transcriptionArea"
+              rows="4"
+              cols="50"
+              placeholder="Your spoken text will appear here..."
+            ></textarea>
+            <style>
+              /* Textarea ka styling */
+              #text textarea {
+                width: 80%;
+                max-width: 600px;
+                height: 180px;
+                padding: 1rem;
+                font-size: 1.2rem;
+                font-family: 'Poppins', sans-serif;
+                color: #333;
+                border: 2px solid #1b8e9a;
+                border-radius: 15px;
+                outline: none;
+                resize: none;
+                margin-top: 20px;
+                background-color: #f9f9f9;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+                transition: border 0.3s ease;
+              }
+              
+              #text textarea:focus {
+                border: 2px solid #145960;
+              }
+              
+              /* Start/Stop buttons ka styling */
+              #text button {
+                padding: 0.8rem 2rem;
+                margin: 1rem 0.5rem;
+                font-size: 1.1rem;
+                font-weight: 600;
+                background-color: #1b8e9a;
+                color: white;
+                border: none;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+              }
+              
+              #text button:hover {
+                background-color: #145960;
+              }
+              
+              /* Output aur Gemini response box styling */
+              #output, #geminiResponse {
+                margin-top: 30px;
+                font-size: 1.2rem;
+                color: #0a3d62;
+                padding: 1rem;
+                background-color: #eaf6f6;
+                border-radius: 10px;
+                width: 80%;
+                max-width: 600px;
+                word-wrap: break-word;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+              }
+              </style>
+              
+            <br />
+            <button id="startButton">Start Recording</button>
+            <button id="stopButton" disabled>Stop Recording</button>
+          </div>
+          <div id="output">Recording Status</div>
+          <div id="geminiResponse">Gemini Response will appear here.</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const startButton = document.getElementById("startButton");
+      const stopButton = document.getElementById("stopButton");
+      const transcriptionArea = document.getElementById("transcriptionArea");
+      const outputDiv = document.getElementById("output");
+      const geminiResponseDiv = document.getElementById("geminiResponse");
+
+      let recognition;
+
+      // Speech Recognition Setup
+      if (
+        "webkitSpeechRecognition" in window ||
+        "SpeechRecognition" in window
+      ) {
+        const SpeechRecognition =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+
+        recognition.lang = "hi-IN"; // Hindi language
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+          outputDiv.textContent = "Recording started. Speak now...";
+          startButton.disabled = true;
+          stopButton.disabled = false;
+        };
+
+        recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          transcriptionArea.value = transcript;
+          outputDiv.textContent = "Recording complete.";
+          sendToGemini(transcript); // Auto-send after speech
+        };
+
+        recognition.onerror = (event) => {
+          console.error("Speech Recognition Error:", event.error);
+          outputDiv.textContent = `Error: ${event.error}`;
+          startButton.disabled = false;
+          stopButton.disabled = true;
+        };
+
+        recognition.onend = () => {
+          outputDiv.textContent = "Recording ended.";
+          startButton.disabled = false;
+          stopButton.disabled = true;
+        };
+
+        startButton.addEventListener("click", () => {
+          recognition.start();
+        });
+
+        stopButton.addEventListener("click", () => {
+          recognition.stop();
+        });
+      } else {
+        alert("Speech Recognition not supported in this browser.");
+        startButton.disabled = true;
+        stopButton.disabled = true;
+      }
+
+      // Send text to Gemini API
+      async function sendToGemini(inputText) {
+        geminiResponseDiv.textContent = "Fetching response from Gemini...";
+        outputDiv.textContent = "Fetching response from Gemini...";
+        try {
+          const response = await fetch("http://localhost:3000/gemini", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ inputText }),
+          });
+
+          if (!response.ok) {
+            console.error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json();
+            console.error("Gemini API Error Response:", errorData);
+            geminiResponseDiv.textContent = `Error fetching response: ${response.statusText}`;
+            outputDiv.textContent = `Error fetching response.`;
+            return;
+          }
+
+          const data = await response.json();
+          console.log("Gemini API Response:", data);
+
+          if (
+            data &&
+            data.candidates &&
+            data.candidates.length > 0 &&
+            data.candidates[0].content &&
+            data.candidates[0].content.parts &&
+            data.candidates[0].content.parts.length > 0 &&
+            data.candidates[0].content.parts[0].text
+          ) {
+            const geminiResponseText = data.candidates[0].content.parts[0].text;
+            console.log("Gemini Response Text:", geminiResponseText);
+            geminiResponseDiv.textContent = geminiResponseText;
+            outputDiv.textContent = "Response received from Gemini.";
+          } else {
+            geminiResponseDiv.textContent =
+              "No response text found from Gemini.";
+            outputDiv.textContent = "No response text found.";
+          }
+        } catch (error) {
+          console.error("Error sending data to Gemini API:", error);
+          geminiResponseDiv.textContent = `Error sending request to Gemini: ${error.message}`;
+          outputDiv.textContent = `Error sending request.`;
+        }
+      }
+    </script>
+  </body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice Input & Gemini</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    #text textarea {
+      width: 80%;
+      max-width: 600px;
+      height: 180px;
+      padding: 1rem;
+      font-size: 1.2rem;
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      border: 2px solid #1b8e9a;
+      border-radius: 15px;
+      outline: none;
+      resize: none;
+      margin-top: 20px;
+      background-color: #f9f9f9;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+      transition: border 0.3s ease;
+    }
+    #text textarea:focus {
+      border: 2px solid #145960;
+    }
+    #text button {
+      padding: 0.8rem 2rem;
+      margin: 1rem 0.5rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      background-color: #1b8e9a;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #text button:hover {
+      background-color: #145960;
+    }
+    #output, #geminiResponse {
+      margin-top: 30px;
+      font-size: 1.2rem;
+      color: #0a3d62;
+      padding: 1rem;
+      background-color: #eaf6f6;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 600px;
+      word-wrap: break-word;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="main">
+    <div id="nav-bar">
+      <div id="logo"><img src="14.png" alt="Logo" /></div>
+      <div id="nav-items">
+        <h3><a id="home" href="index.html">Home</a></h3>
+        <h3><a id="Symptom-Check" href="#">Symptom Check</a></h3>
+        <h3><a id="My-reports" href="#">My Reports</a></h3>
+        <h3><a id="Nearby-Doctors" href="#">Nearby Doctors</a></h3>
+      </div>
+    </div>
+
+    <div id="content">
+      <div id="text">
+        <h1>Voice Input for Reports & Gemini Response</h1>
+        <p>Speak in Hindi to record information and get a response from Gemini.</p>
+
+        <textarea id="transcriptionArea" placeholder="Your spoken text will appear here..."></textarea><br />
+
+        <button id="startButton">Start Recording</button>
+        <button id="stopButton" disabled>Stop Recording</button>
+
+        <div id="output">Recording Status</div>
+        <div id="geminiResponse">Gemini Response will appear here.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const startButton = document.getElementById("startButton");
+    const stopButton = document.getElementById("stopButton");
+    const transcriptionArea = document.getElementById("transcriptionArea");
+    const outputDiv = document.getElementById("output");
+    const geminiResponseDiv = document.getElementById("geminiResponse");
+
+    let recognition;
+
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+
+      recognition.lang = "hi-IN"; 
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        outputDiv.textContent = "Recording started. Speak now...";
+        startButton.disabled = true;
+        stopButton.disabled = false;
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        transcriptionArea.value = transcript;
+        outputDiv.textContent = "Recording complete.";
+        sendToGemini(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error("Speech Recognition Error:", event.error);
+        outputDiv.textContent = `Error: ${event.error}`;
+        startButton.disabled = false;
+        stopButton.disabled = true;
+      };
+
+      recognition.onend = () => {
+        outputDiv.textContent = "Recording ended.";
+        startButton.disabled = false;
+        stopButton.disabled = true;
+      };
+
+      startButton.addEventListener("click", () => {
+        transcriptionArea.value = ""; 
+        recognition.start();
+      });
+
+      stopButton.addEventListener("click", () => {
+        recognition.stop();
+      });
+    } else {
+      alert("Speech Recognition not supported in this browser.");
+      startButton.disabled = true;
+      stopButton.disabled = true;
+    }
+
+    async function sendToGemini(inputText) {
+      geminiResponseDiv.textContent = "Fetching response from Gemini...";
+      outputDiv.textContent = "Fetching response...";
+
+      try {
+        const response = await fetch(
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyBRoHbrtjNpAJBU8wwGtK4No7SOSc4B33Q",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: `Mujhe yeh symptom hai: "${inputText}". Iska kya kaaran ho sakta hai, kya upay hain aur kya doctor se milna chahiye? `
+                    }
+                  ]
+                }
+              ]
+            })
+          }
+        );
+
+        const data = await response.json();
+        console.log("Gemini API Response:", data);
+
+        if (
+          data.candidates &&
+          data.candidates.length > 0 &&
+          data.candidates[0].content &&
+          data.candidates[0].content.parts &&
+          data.candidates[0].content.parts.length > 0
+        ) {
+          const geminiResponseText = data.candidates[0].content.parts[0].text;
+          geminiResponseDiv.textContent = geminiResponseText;
+          outputDiv.textContent = "Response received from Gemini.";
+        } else {
+          geminiResponseDiv.textContent = "No valid response from Gemini.";
+          outputDiv.textContent = "No response text found.";
+        }
+
+      } catch (error) {
+        console.error("Error sending to Gemini:", error);
+        geminiResponseDiv.textContent = `Error: ${error.message}`;
+        outputDiv.textContent = `Request error.`;
+      }
+    }
+  </script>
+</body>
+</html> 
