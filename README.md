@@ -8,7 +8,7 @@
 
 ## 🌐 Live Preview
 
-(👉 https://vercel.com/shashank12-collabs-projects/healthcare-chatbot-2fq8/24pZBYnHGR2knDdJX7v9jDcSjBkB)
+(👉 https://healthcare-chatbot-2fq8.vercel.app/)
 
 ---
 
